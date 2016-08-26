@@ -1,12 +1,14 @@
 package io.locative.app.network;
 
 import retrofit.Callback;
+import retrofit.http.Body;
 import retrofit.http.Field;
 import retrofit.http.FormUrlEncoded;
 import retrofit.http.GET;
 import retrofit.http.POST;
 import retrofit.http.Path;
 import retrofit.http.Query;
+import retrofit.mime.TypedString;
 
 public interface LocativeApiService {
 
@@ -31,6 +33,18 @@ public interface LocativeApiService {
             @Path("session") String sessionId,
             Callback<String> callback);
 
+    @GET("/api/geofences/sync")
+    void sync(@Query("lastSync") long lastSync,
+              @Query("sessionId") String sessionId,
+              Callback<String> callback);
+
+    @POST("/api/geofences/{session}")
+    void addGeofence(@Path("session") String sessionId, @Body TypedString string, Callback<String> callback);
+
+    @POST("/api/geofences/{session}/{geofence}")
+    void updateGeofence(@Path("session") String sessionId, @Path("geofence") String geofenceId, @Body TypedString string, Callback<String> callback);
+
+
     @FormUrlEncoded
     @POST("/api/fencelogs/{session}")
     void dispatchFencelog(
@@ -51,7 +65,6 @@ public interface LocativeApiService {
     void getGeofences(
             @Query("sessionId") String sessionId,
             Callback<String> callback);
-
     @GET("/api/fencelogs/{session}")
     void getFencelogs(
             @Path("session") String sessionId,

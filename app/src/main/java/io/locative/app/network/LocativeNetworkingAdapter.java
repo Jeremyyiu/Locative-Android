@@ -35,4 +35,14 @@ public class LocativeNetworkingAdapter implements LocativeNetworkingCallback{
     public void onGetFencelogsFinished(List<Fencelog> fencelogs) {
 
     }
+
+    @Override
+    public void onSyncReceived(List<Geofences.Geofence> geofences, List<String> deleted) {
+
+    }
+
+    @Override
+    public void onStoredGeofence() {
+
+    }
 }

@@ -39,6 +39,18 @@ public enum Storage {
         return returnFence;
     }
 
+    public boolean deleteFence(Geofences.Geofence fence, Context context) {
+        final String QUERY = GeofenceProvider.Geofence.KEY_CUSTOMID + " = ?";
+        final String[] PARAMETERS = new String[]{fence.subtitle};
+        ContentResolver resolver = context.getContentResolver();
+        try {
+            resolver.delete(Uri.parse("content://" + context.getString(R.string.authority) + "/geofences"), QUERY, PARAMETERS);
+            return true;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
     @NonNull
     private ContentValues makeContentValuesForGeofence(Geofences.Geofence fence) {
         ContentValues values = new ContentValues();

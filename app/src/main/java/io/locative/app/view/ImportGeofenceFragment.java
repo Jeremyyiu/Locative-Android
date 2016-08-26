@@ -47,8 +47,10 @@ public class ImportGeofenceFragment extends ListFragment {
             hm.put(SUBTITLE_KEY, geofence.longitude + ", " + geofence.latitude + (!geofence.title.equals(LocativeApiWrapper.UNNAMED_FENCE) ? (" - " + geofence.title): ""));
             aList.add(hm);
         }
-        GeofencesAdapter adapter = new GeofencesAdapter(getActivity().getBaseContext(), aList, R.layout.geofence_row, FROM, TO);
-        setListAdapter(adapter);
+        if (getActivity() != null && getActivity().getBaseContext() != null) {
+            GeofencesAdapter adapter = new GeofencesAdapter(getActivity().getBaseContext(), aList, R.layout.geofence_row, FROM, TO);
+            setListAdapter(adapter);
+        }
     }
 
     public void onAttach(Context context) {

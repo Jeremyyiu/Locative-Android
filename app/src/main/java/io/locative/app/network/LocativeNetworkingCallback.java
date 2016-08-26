@@ -22,4 +22,7 @@ public interface LocativeNetworkingCallback {
 
     void onGetFencelogsFinished(List<Fencelog> fencelogs);
 
+    void onSyncReceived(List<Geofences.Geofence> geofences, List<String> deleted);
+
+    void onStoredGeofence();
 }

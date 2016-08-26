@@ -47,6 +47,7 @@ public class Geofences {
         public final String enterUrl;
         public final int exitMethod;
         public final String exitUrl;
+        public final long lastChanged;
 
         public Geofence(
                 String id,
@@ -62,7 +63,8 @@ public class Geofences {
                 int enterMethod,
                 String enterUrl,
                 int exitMethod,
-                String exitUrl) {
+                String exitUrl,
+                long lastChanged) {
             this.id = id;
             this.title = title;
             this.subtitle = subtitle;
@@ -77,12 +79,13 @@ public class Geofences {
             this.enterUrl = enterUrl;
             this.exitMethod = exitMethod;
             this.exitUrl = exitUrl;
+            this.lastChanged = lastChanged;
         }
 
         public Geofence setId(String id) {
             return new Geofence(
                     id, title, subtitle, triggers, latitude, longitude, radiusMeters, httpAuth,
-                    httpUsername, httpPassword, enterMethod, enterUrl, exitMethod, exitUrl
+                    httpUsername, httpPassword, enterMethod, enterUrl, exitMethod, exitUrl, lastChanged
             );
         }
 

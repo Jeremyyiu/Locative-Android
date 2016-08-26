@@ -45,5 +45,16 @@
         android:src="@drawable/ic_add_white_24px"
         app:fabSize="normal" />
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sync"
+        android:id="@+id/sync_button"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignBottom="@+id/toolbar_actionbar"
+        android:layout_alignLeft="@+id/add_geofence"
+        android:layout_alignStart="@+id/add_geofence" />
+
 
 </RelativeLayout>

@@ -18,12 +18,15 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.FrameLayout;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 import javax.inject.Inject;
 
@@ -49,6 +52,9 @@ public class GeofencesActivity extends BaseActivity implements GeofenceFragment.
     @BindView(R.id.nav_view)
     NavigationView mNavigationView;
 
+    @BindView(R.id.sync_button)
+    Button mSync;
+
     @BindView(R.id.container)
     FrameLayout mContentFrame;
 
@@ -57,6 +63,8 @@ public class GeofencesActivity extends BaseActivity implements GeofenceFragment.
 
     @Inject
     LocativeApiWrapper mLocativeNetworkingWrapper;
+
+    @Inject protected SharedPreferences mPrefs;
 
     @Inject
     SessionManager mSessionManager;
@@ -345,6 +353,28 @@ public class GeofencesActivity extends BaseActivity implements GeofenceFragment.
         mGeofenceFragment.refresh();
 
         updateGeofencingService(items);
+    }
+
+    @OnClick(R.id.sync_button)
+    public void syncGeofences() {
+        Log.i("SYNC", "sync started");
+        GeofenceSync sync = new GeofenceSync(this.mLocativeNetworkingWrapper, this.mSessionManager.getSessionId(), mPrefs.getLong("LAST_SYNCED", 0), Geofences.ITEMS, this);
+        sync.startSync(new GeofenceSync.SyncHandler() {
+            @Override
+            public void onSyncCompleted() {
+                SharedPreferences.Editor editor = mPrefs.edit();
+                editor.putLong("LAST_SYNCED", System.currentTimeMillis() / 1000L);
+                editor.apply();
+                Log.i("SYNC", "success");
+                load();
+            }
+
+            @Override
+            public void onSyncFailed() {
+                Log.i("SYNC", "failed");
+                load();
+            }
+        });
     }
 
     private void updateGeofencingService(ArrayList<Geofences.Geofence> items) {

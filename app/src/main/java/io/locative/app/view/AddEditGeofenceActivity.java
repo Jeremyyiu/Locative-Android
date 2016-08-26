@@ -39,6 +39,7 @@ import com.schuetz.mapareas.MapAreaMeasure;
 import com.schuetz.mapareas.MapAreaWrapper;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
@@ -422,6 +423,7 @@ public class AddEditGeofenceActivity extends BaseActivity implements OnMapReadyC
         values.put(GeofenceProvider.Geofence.KEY_HTTP_PASSWORD, mBasicAuthPassword.getText().toString());
         values.put(GeofenceProvider.Geofence.KEY_LATITUDE, mCircle.getCenter().latitude);
         values.put(GeofenceProvider.Geofence.KEY_LONGITUDE, mCircle.getCenter().longitude);
+        values.put(GeofenceProvider.Geofence.KEY_LAST_CHANGED, new Date().getTime());
 
         if (mIsEditingGeofence) {
             resolver.update(Uri.parse("content://" + getString(R.string.authority) + "/geofences"), values, "_id = ?", new String[]{String.valueOf(mEditGeofenceId)});

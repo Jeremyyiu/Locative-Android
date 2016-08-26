@@ -3,10 +3,12 @@ package io.locative.app.network;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -15,6 +17,7 @@ import org.threeten.bp.LocalDateTime;
 import org.threeten.bp.ZonedDateTime;
 import org.threeten.bp.format.DateTimeParseException;
 
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -166,6 +169,96 @@ public class LocativeApiWrapper {
         });
     }
 
+    public void getSync(String sessionId, long lastSync, final LocativeNetworkingCallback callback) {
+        mService.sync(lastSync, sessionId, new Callback<String>() {
+            @Override
+            public void success(String s, Response response) {
+                final GsonToGeofenceConverter converter = new GsonToGeofenceConverter();
+                final JsonElement json = mParser.parse(s);
+                final JsonObject object = json.getAsJsonObject();
+                if (!object.get("error").getAsBoolean()) {
+                    final List<Geofences.Geofence> geofences = converter.getGeofences(object.get("geofences").getAsJsonArray());
+                    final List<String> deleted = new ArrayList<String>();
+                    for (JsonElement element : object.get("deleted").getAsJsonArray())
+                        deleted.add(element.getAsJsonObject().get("locationId").getAsString());
+                    callback.onSyncReceived(geofences, deleted);
+                }
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+                Log.e("API", error.getMessage());
+            }
+        });
+    }
+
+    public void addGeofence(String sessionId, Geofences.Geofence geofence, final LocativeNetworkingCallback callback) {
+        String json = convertToJson(geofence).toString();
+        mService.addGeofence(sessionId, new TypedJsonString(json), new Callback<String>() {
+            @Override
+            public void success(String s, Response response) {
+                final JsonElement json = mParser.parse(s);
+                boolean error = json.getAsJsonObject().get("error").getAsBoolean();
+                if (!error)
+                    callback.onStoredGeofence();
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+
+            }
+        });
+    }
+
+    public void updateGeofence(String sessionId, Geofences.Geofence geofence, final LocativeNetworkingCallback callback) {
+        String json = convertToJson(geofence).toString();
+        mService.updateGeofence(sessionId, geofence.id, new TypedJsonString(json), new Callback<String>() {
+            @Override
+            public void success(String s, Response response) {
+                final JsonElement json = mParser.parse(s);
+                boolean error = json.getAsJsonObject().get("error").getAsBoolean();
+                if (!error)
+                    callback.onStoredGeofence();
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+
+            }
+        });
+    }
+
+    private boolean isTriggerEnabled(int trigger, int mask) {
+       return ( trigger & mask ) == mask;
+    }
+
+    public JsonObject convertToJson(Geofences.Geofence geofence) {
+        JsonObject object = new JsonObject();
+        object.addProperty("locationId", geofence.subtitle);
+        JsonObject location = new JsonObject();
+        location.addProperty("lon", geofence.longitude);
+        location.addProperty("lat", geofence.latitude);
+        location.addProperty("radius", geofence.radiusMeters);
+        JsonObject basicAuth = new JsonObject();
+        basicAuth.addProperty("enabled", geofence.hasAuthentication());
+        basicAuth.addProperty("username", geofence.httpUsername);
+        basicAuth.addProperty("password", geofence.httpPassword);
+        JsonObject triggerOnArrival = new JsonObject();
+        triggerOnArrival.addProperty("enabled", isTriggerEnabled(geofence.triggers, GeofenceProvider.TRIGGER_ON_ENTER));
+        triggerOnArrival.addProperty("method", geofence.enterMethod);
+        triggerOnArrival.addProperty("url", geofence.enterUrl);
+        JsonObject triggerOnLeave = new JsonObject();
+        triggerOnLeave.addProperty("enabled", isTriggerEnabled(geofence.triggers, GeofenceProvider.TRIGGER_ON_EXIT));
+        triggerOnLeave.addProperty("method", geofence.exitMethod);
+        triggerOnLeave.addProperty("url", geofence.exitUrl);
+        object.add("basicAuth", basicAuth);
+        object.add("location", location);
+        object.add("triggerOnArrival", triggerOnArrival);
+        object.add("triggerOnLeave", triggerOnLeave);
+        return object;
+    }
+
+
     private class GsonToGeofenceConverter {
         private static final String JSONKEY_ENABLED = "enabled",
                 JSONKEY_LOCATIONID = "locationId",
@@ -181,7 +274,8 @@ public class LocativeApiWrapper {
                 JSONKEY_PASSWORD = "password",
                 JSONKEY_METHOD = "method",
                 JSONKEY_URL = "url",
-                JSONKEY_GEOFENCES = "geofences";
+                JSONKEY_GEOFENCES = "geofences",
+                JSONKEY_LAST_UPDATED = "modified_at";
 
         public List<Geofences.Geofence> makeList(JsonElement json) {
            return this.getGeofences(json.getAsJsonObject().getAsJsonArray(JSONKEY_GEOFENCES));
@@ -195,6 +289,8 @@ public class LocativeApiWrapper {
         }
 
         private Geofences.Geofence makeGeofence(JsonObject geofenceJson) {
+
+            final DateFormat FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
             String locationId = geofenceJson.get(JSONKEY_LOCATIONID).getAsString();
             String subtitle = geofenceJson.get(JSONKEY_UUID).getAsString();
             JsonObject location = geofenceJson.getAsJsonObject(JSONKEY_LOCATION);
@@ -202,11 +298,17 @@ public class LocativeApiWrapper {
             JsonObject triggerOnLeave = geofenceJson.getAsJsonObject(JSONKEY_TRIGGERONLEAVE);
             JsonObject triggerOnArrival = geofenceJson.getAsJsonObject(JSONKEY_TRIGGERONARRIVAL);
             int triggers = createTrigger(triggerOnLeave, triggerOnArrival);
-            float lat = location.get(JSONKEY_LAT).getAsFloat();
-            float lon = location.get(JSONKEY_LONG).getAsFloat();
-            int radius = location.get(JSONKEY_RADIUS).getAsInt();
+            float lat = location.get(JSONKEY_LAT).isJsonNull() ? 0.0f : location.get(JSONKEY_LAT).getAsFloat();
+            float lon = location.get(JSONKEY_LONG).isJsonNull() ? 0.0f : location.get(JSONKEY_LONG).getAsFloat();
+            int radius = location.get(JSONKEY_RADIUS).isJsonNull() ? 0 : location.get(JSONKEY_RADIUS).getAsInt();
+            long time = 0;
+            try {
+                time = FORMAT.parse(geofenceJson.get(JSONKEY_LAST_UPDATED).getAsString()).getTime();
+            } catch (ParseException exception) {
+
+            }
             return new Geofences.Geofence(
-                    "0",
+                    subtitle,
                     subtitle,
                     locationId,
                     triggers,
@@ -214,12 +316,13 @@ public class LocativeApiWrapper {
                     lon,
                     radius,
                     basicAuth.get(JSONKEY_ENABLED).getAsBoolean() ? 1 : 0,
-                    basicAuth.get(JSONKEY_USERNAME).getAsString(),
-                    basicAuth.get(JSONKEY_PASSWORD).getAsString(),
-                    triggerOnArrival.get(JSONKEY_METHOD).getAsInt(),
-                    triggerOnArrival.get(JSONKEY_URL).getAsString(),
-                    triggerOnLeave.get(JSONKEY_METHOD).getAsInt(),
-                    triggerOnLeave.get(JSONKEY_URL).getAsString()
+                    basicAuth.get(JSONKEY_USERNAME) == null || basicAuth.get(JSONKEY_USERNAME).isJsonNull() ? "" : basicAuth.get(JSONKEY_USERNAME).getAsString(),
+                    basicAuth.get(JSONKEY_PASSWORD) == null || basicAuth.get(JSONKEY_PASSWORD).isJsonNull() ? "" : basicAuth.get(JSONKEY_PASSWORD).getAsString(),
+                    triggerOnArrival.get(JSONKEY_METHOD) == null || triggerOnArrival.get(JSONKEY_METHOD).isJsonNull() || triggerOnArrival.get(JSONKEY_METHOD).getAsString().equals("") ? 0 : triggerOnArrival.get(JSONKEY_METHOD).getAsInt(),
+                    triggerOnArrival.get(JSONKEY_URL) == null || triggerOnArrival.get(JSONKEY_URL).isJsonNull() ? "" : triggerOnArrival.get(JSONKEY_URL).getAsString(),
+                    triggerOnLeave.get(JSONKEY_METHOD) == null || triggerOnLeave.get(JSONKEY_METHOD).isJsonNull() || triggerOnLeave.get(JSONKEY_METHOD).getAsString().equals("")? 0 : triggerOnLeave.get(JSONKEY_METHOD).getAsInt(),
+                    triggerOnLeave.get(JSONKEY_URL) == null || triggerOnLeave.get(JSONKEY_URL).isJsonNull() ? "" : triggerOnLeave.get(JSONKEY_URL).getAsString(),
+                    time
             );
         }
 

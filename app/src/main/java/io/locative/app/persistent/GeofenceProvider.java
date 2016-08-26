@@ -13,7 +13,7 @@ import io.locative.app.model.Geofences;
 
 public class GeofenceProvider extends AbstractProvider {
 
-    private static int SCHEMA_VERSION = 1;
+    private static int SCHEMA_VERSION = 2;
 
     public static final int TRIGGER_ON_ENTER = 0x01;
     public static final int TRIGGER_ON_EXIT = 0x02;
@@ -53,7 +53,8 @@ public class GeofenceProvider extends AbstractProvider {
                 cursor.getInt(cursor.getColumnIndex(Geofence.KEY_ENTER_METHOD)),
                 cursor.getString(cursor.getColumnIndex(Geofence.KEY_ENTER_URL)),
                 cursor.getInt(cursor.getColumnIndex(Geofence.KEY_EXIT_METHOD)),
-                cursor.getString(cursor.getColumnIndex(Geofence.KEY_EXIT_URL))
+                cursor.getString(cursor.getColumnIndex(Geofence.KEY_EXIT_URL)),
+                cursor.getColumnIndex(Geofence.KEY_LAST_CHANGED) > -1 ? cursor.getLong(cursor.getColumnIndex(Geofence.KEY_LAST_CHANGED)) : 0
                 );
     }
 
@@ -121,5 +122,8 @@ public class GeofenceProvider extends AbstractProvider {
 
         @Column(Column.FieldType.TEXT)
         public static final String KEY_UUID = "uuid";
+
+        @Column(Column.FieldType.INTEGER)
+        public static final String KEY_LAST_CHANGED = "last_changed";
     }
 }
