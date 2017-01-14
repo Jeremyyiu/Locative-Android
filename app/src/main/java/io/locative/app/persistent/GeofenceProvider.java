@@ -9,6 +9,7 @@ import de.triplet.simpleprovider.AbstractProvider;
 import de.triplet.simpleprovider.Column;
 import de.triplet.simpleprovider.Table;
 import io.locative.app.R;
+import io.locative.app.beacon.BeaconItem;
 import io.locative.app.model.Geofences;
 
 public class GeofenceProvider extends AbstractProvider {
@@ -54,9 +55,24 @@ public class GeofenceProvider extends AbstractProvider {
                 cursor.getString(cursor.getColumnIndex(Geofence.KEY_ENTER_URL)),
                 cursor.getInt(cursor.getColumnIndex(Geofence.KEY_EXIT_METHOD)),
                 cursor.getString(cursor.getColumnIndex(Geofence.KEY_EXIT_URL)),
+                cursor.getString(cursor.getColumnIndex(Geofence.KEY_IBEACON_UUID)),
+                cursor.getInt(cursor.getColumnIndex(Geofence.KEY_IBEACON_MAJOR)),
+                cursor.getInt(cursor.getColumnIndex(Geofence.KEY_IBEACON_MINOR)),
+                cursor.getInt(cursor.getColumnIndex(Geofence.KEY_TYPE))
+        );
+                cursor.getString(cursor.getColumnIndex(Geofence.KEY_EXIT_URL)),
                 cursor.getInt(cursor.getColumnIndex(Geofence.KEY_CURRENTLY_ENTERED))
                 );
         return geofence;
+    }
+
+    public static BeaconItem beaconFromCursor(Cursor cursor) {
+        return new BeaconItem(
+                fromCursor(cursor),
+                cursor.getString(cursor.getColumnIndex(Geofence.KEY_IBEACON_UUID)),
+                cursor.getInt(cursor.getColumnIndex(Geofence.KEY_IBEACON_MAJOR)),
+                cursor.getInt(cursor.getColumnIndex(Geofence.KEY_IBEACON_MINOR))
+        );
     }
 
     @Override

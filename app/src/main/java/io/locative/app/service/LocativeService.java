@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import io.locative.app.R;
+import io.locative.app.beacon.BeaconItem;
 import io.locative.app.geo.GeofenceErrorMessages;
 import io.locative.app.model.Geofences;
 import io.locative.app.notification.NotificationManager;
@@ -38,8 +39,11 @@ public class LocativeService extends Service implements
     public static final String EXTRA_ACTION = "action";
     private static final String TAG = "GEO";
 
-    private final List<Geofence> mGeofenceListsToAdd = new ArrayList<Geofence>();
-    private List<String> mGeofenceListsToRemove = new ArrayList<String>();
+    private final List<Geofence> mGeofenceListsToAdd = new ArrayList<>();
+    private final List<BeaconItem> mBeaconsToAdd = new ArrayList<>();
+
+    private final List<String> mGeofenceListsToRemove = new ArrayList<>();
+    private final List<BeaconItem> mBeaconsToRemove = new ArrayList<>();
 
     /**
      * Provides the entry point to Google Play services.
@@ -70,6 +74,10 @@ public class LocativeService extends Service implements
             case ADD:
                 ArrayList<Geofences.Geofence> geofences = (ArrayList<Geofences.Geofence>) intent.getSerializableExtra(EXTRA_GEOFENCE);
                 for (Geofences.Geofence newGeofence : geofences) {
+                    if (newGeofence.isBeacon()) {
+                        mBeaconsToAdd.add(newGeofence.asBeacon());
+                        continue;
+                    }
                     Geofence googleGeofence = newGeofence.toGeofence();
                     if (googleGeofence != null) {
                         Log.d(Constants.LOG, "Adding Geofence: " + googleGeofence);

@@ -10,6 +10,7 @@ import javax.inject.Singleton;
 import dagger.Module;
 import dagger.Provides;
 import io.locative.app.LocativeApplication;
+import io.locative.app.beacon.BeaconController;
 import io.locative.app.service.TriggerManager;
 import io.locative.app.notification.NotificationManager;
 import io.locative.app.utils.ResourceUtils;
@@ -53,5 +54,12 @@ public class AppModule {
     @Provides
     ResourceUtils provideResourceUtils() {
         return new ResourceUtils(mApp);
+    }
+
+    @SuppressWarnings("unused")
+    @Provides
+    @Singleton
+    BeaconController provideBeaconController() {
+        return new BeaconController(mApp);
     }
 }

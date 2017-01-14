@@ -253,7 +253,7 @@ public class GeofencesActivity extends BaseActivity implements GeofenceFragment.
                         new PrimaryDrawerItem().withName(getResources().getString(R.string.notifications)),
                         new PrimaryDrawerItem().withName(getResources().getString(R.string.title_settings)).withSelectable(false),
                         new PrimaryDrawerItem().withName(getResources().getString(R.string.title_support)).withSelectable(false)
-                        )
+                )
                 .withOnDrawerListener(new Drawer.OnDrawerListener() {
                     @Override
                     public void onDrawerOpened(View drawerView) {
@@ -321,7 +321,7 @@ public class GeofencesActivity extends BaseActivity implements GeofenceFragment.
                                 fragment = mFenceLogsFragment;
                                 fragmentTag = FencelogsFragment.TAG;
                                 mFabButton.hide();
-                                setTitle(((PrimaryDrawerItem)drawerItem).getName().getText());
+                                setTitle(((PrimaryDrawerItem) drawerItem).getName().getText());
                                 break;
                             case DRAWER_ITEMS.NOTIFICATIONS:
                                 if (!mSessionManager.hasSession()) {
@@ -349,7 +349,7 @@ public class GeofencesActivity extends BaseActivity implements GeofenceFragment.
                                 fragment = mNotificationsFragment;
                                 fragmentTag = NotificationsFragment.TAG;
                                 mFabButton.hide();
-                                setTitle(((PrimaryDrawerItem)drawerItem).getName().getText());
+                                setTitle(((PrimaryDrawerItem) drawerItem).getName().getText());
                                 break;
                             case DRAWER_ITEMS.SETTINGS:
                                 startActivity(new Intent(self, SettingsActivity.class));
@@ -385,9 +385,9 @@ public class GeofencesActivity extends BaseActivity implements GeofenceFragment.
                 fragmentTag = savedInstanceState.getString(FRAGMENTTAG);
             }
             if (savedInstanceState.containsKey(BUNDLE_DRAWER_STATE)) {
-               if (mDrawer != null) {
-                   mDrawer.setSelectionAtPosition(savedInstanceState.getInt(BUNDLE_DRAWER_STATE));
-               }
+                if (mDrawer != null) {
+                    mDrawer.setSelectionAtPosition(savedInstanceState.getInt(BUNDLE_DRAWER_STATE));
+                }
             }
         }
         super.onCreate(savedInstanceState);
@@ -643,27 +643,27 @@ public class GeofencesActivity extends BaseActivity implements GeofenceFragment.
         dialog.show();
 
         new Thread(new Runnable() {
-           @Override
-           public void run() {
-               Address address = new LocativeGeocoder().getFromLatLong(fence.latitude, fence.longitude, self);
-               if (address != null) {
-                   fence.name = address.getAddressLine(0);
-               }
-               mStorage.insertOrUpdateFence(fence);
-               final FragmentManager fragmentManager = getFragmentManager();
-               runOnUiThread(new Runnable() {
-                   @Override
-                   public void run() {
-                       dialog.dismiss();
-                       FragmentTransaction transaction = fragmentManager.beginTransaction();
-                       Geofences.ITEMS.add(fence);
-                       transaction.replace(R.id.container, mGeofenceFragment, GeofenceFragment.TAG).commit();
-                       setTitle(R.string.title_geofences);
-                       mFabButton.show();
-                   }
-               });
-           }
-       }).run();
+            @Override
+            public void run() {
+                Address address = new LocativeGeocoder().getFromLatLong(fence.latitude, fence.longitude, self);
+                if (address != null) {
+                    fence.name = address.getAddressLine(0);
+                }
+                mStorage.insertOrUpdateFence(fence);
+                final FragmentManager fragmentManager = getFragmentManager();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        dialog.dismiss();
+                        FragmentTransaction transaction = fragmentManager.beginTransaction();
+                        Geofences.ITEMS.add(fence);
+                        transaction.replace(R.id.container, mGeofenceFragment, GeofenceFragment.TAG).commit();
+                        setTitle(R.string.title_geofences);
+                        mFabButton.show();
+                    }
+                });
+            }
+        }).run();
 
     }
 
