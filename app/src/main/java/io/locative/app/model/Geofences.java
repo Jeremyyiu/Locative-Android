@@ -107,8 +107,7 @@ public class Geofences {
                 String beaconUuid,
                 int beaconMajor,
                 int beaconMinor,
-                int type) {
-                String exitUrl,
+                int type,
                 int currentlyEntered
         ) {
             this.uuid = (uuid == null) ? UUID.randomUUID().toString() : uuid;

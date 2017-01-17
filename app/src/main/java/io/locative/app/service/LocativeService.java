@@ -42,8 +42,8 @@ public class LocativeService extends Service implements
     private final List<Geofence> mGeofenceListsToAdd = new ArrayList<>();
     private final List<BeaconItem> mBeaconsToAdd = new ArrayList<>();
 
-    private final List<String> mGeofenceListsToRemove = new ArrayList<>();
-    private final List<BeaconItem> mBeaconsToRemove = new ArrayList<>();
+    private List<String> mGeofenceListsToRemove = new ArrayList<>();
+    private List<BeaconItem> mBeaconsToRemove = new ArrayList<>();
 
     /**
      * Provides the entry point to Google Play services.

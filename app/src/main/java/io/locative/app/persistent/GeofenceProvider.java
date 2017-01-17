@@ -58,9 +58,7 @@ public class GeofenceProvider extends AbstractProvider {
                 cursor.getString(cursor.getColumnIndex(Geofence.KEY_IBEACON_UUID)),
                 cursor.getInt(cursor.getColumnIndex(Geofence.KEY_IBEACON_MAJOR)),
                 cursor.getInt(cursor.getColumnIndex(Geofence.KEY_IBEACON_MINOR)),
-                cursor.getInt(cursor.getColumnIndex(Geofence.KEY_TYPE))
-        );
-                cursor.getString(cursor.getColumnIndex(Geofence.KEY_EXIT_URL)),
+                cursor.getInt(cursor.getColumnIndex(Geofence.KEY_TYPE)),
                 cursor.getInt(cursor.getColumnIndex(Geofence.KEY_CURRENTLY_ENTERED))
                 );
         return geofence;

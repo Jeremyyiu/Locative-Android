@@ -329,6 +329,10 @@ public class SettingsActivity extends BaseActivity {
                 null, // Enter Url
                 0, // Exit Method
                 null, // Exit Url
+                null, // BeaconUUID
+                0, // Major
+                0, // Minor
+                0, // Type
                 0 // Currently Entered
         );
 

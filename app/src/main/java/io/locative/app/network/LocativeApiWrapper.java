@@ -227,7 +227,11 @@ public class LocativeApiWrapper {
                     triggerOnArrival.get(JSONKEY_URL).getAsString(),
                     triggerOnLeave.get(JSONKEY_METHOD).getAsInt(),
                     triggerOnLeave.get(JSONKEY_URL).getAsString(),
-                    0
+                    null, // BeaconUUID
+                    0, // Major
+                    0, // Minor
+                    0, // Type 0 = Geofence
+                    0 // Currently Entered
             );
         }
 
