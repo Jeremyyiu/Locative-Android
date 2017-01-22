@@ -66,9 +66,10 @@
                 <data android:scheme="locative"/>
             </intent-filter>
             </activity>
-        <service android:name=".service.LocativeService" />
+        <service android:name=".service.GeofencingService" />
         <service android:name=".service.TransitionService" />
-        <service android:name="io.locative.app.service.ReceiveTransitionsIntentService" />
+        <service android:name=".service.ReceiveTransitionsIntentService" />
+        <service android:name=".service.BeaconService" />
         <service
             android:name=".notification.NotificationTokenManager">
             <intent-filter>

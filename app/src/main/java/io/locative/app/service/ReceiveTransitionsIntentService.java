@@ -159,11 +159,11 @@ public class ReceiveTransitionsIntentService extends IntentService {
     }
 
     private void removeGeofences(List<String> requestIds) {
-        Intent intent = new Intent(getApplicationContext(), LocativeService.class);
+        Intent intent = new Intent(getApplicationContext(), GeofencingService.class);
 
         String[] ids = new String[0];
-        intent.putExtra(LocativeService.EXTRA_REQUEST_IDS, requestIds.toArray(ids));
-        intent.putExtra(LocativeService.EXTRA_ACTION, LocativeService.Action.REMOVE);
+        intent.putExtra(GeofencingService.EXTRA_REQUEST_IDS, requestIds.toArray(ids));
+        intent.putExtra(GeofencingService.EXTRA_ACTION, GeofencingService.Action.REMOVE);
 
         startService(intent);
     }

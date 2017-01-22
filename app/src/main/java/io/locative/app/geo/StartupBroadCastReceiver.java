@@ -13,7 +13,8 @@ import java.util.ArrayList;
 
 import io.locative.app.R;
 import io.locative.app.model.Geofences;
-import io.locative.app.service.LocativeService;
+import io.locative.app.service.BeaconService;
+import io.locative.app.service.GeofencingService;
 import io.locative.app.persistent.GeofenceProvider;
 
 public class StartupBroadCastReceiver extends BroadcastReceiver {
@@ -37,10 +38,15 @@ public class StartupBroadCastReceiver extends BroadcastReceiver {
                         items.add(item);
                     }
                 }
-                Intent startServiceIntent = new Intent(context, LocativeService.class);
-                startServiceIntent.putExtra(LocativeService.EXTRA_ACTION, LocativeService.Action.ADD);
-                startServiceIntent.putExtra(LocativeService.EXTRA_GEOFENCE, items);
-                context.startService(startServiceIntent);
+                final Intent startGeofencingServiceIntent = new Intent(context, GeofencingService.class);
+                startGeofencingServiceIntent.putExtra(GeofencingService.EXTRA_ACTION, GeofencingService.Action.ADD);
+                startGeofencingServiceIntent.putExtra(GeofencingService.EXTRA_GEOFENCE, items);
+                context.startService(startGeofencingServiceIntent);
+
+                final Intent startBeaconServiceIntent = new Intent(context, BeaconService.class);
+                startBeaconServiceIntent.putExtra(BeaconService.EXTRA_ACTION, BeaconService.Action.ADD);
+                startBeaconServiceIntent.putExtra(BeaconService.EXTRA_BEACONS, items);
+                context.startService(startBeaconServiceIntent);
             }
         });
 

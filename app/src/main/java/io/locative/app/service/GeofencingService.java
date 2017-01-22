@@ -31,7 +31,7 @@ import io.locative.app.model.Geofences;
 import io.locative.app.notification.NotificationManager;
 import io.locative.app.utils.Constants;
 
-public class LocativeService extends Service implements
+public class GeofencingService extends Service implements
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     public static final String EXTRA_REQUEST_IDS = "requestId";
@@ -40,10 +40,7 @@ public class LocativeService extends Service implements
     private static final String TAG = "GEO";
 
     private final List<Geofence> mGeofenceListsToAdd = new ArrayList<>();
-    private final List<BeaconItem> mBeaconsToAdd = new ArrayList<>();
-
     private List<String> mGeofenceListsToRemove = new ArrayList<>();
-    private List<BeaconItem> mBeaconsToRemove = new ArrayList<>();
 
     /**
      * Provides the entry point to Google Play services.
@@ -74,10 +71,6 @@ public class LocativeService extends Service implements
             case ADD:
                 ArrayList<Geofences.Geofence> geofences = (ArrayList<Geofences.Geofence>) intent.getSerializableExtra(EXTRA_GEOFENCE);
                 for (Geofences.Geofence newGeofence : geofences) {
-                    if (newGeofence.isBeacon()) {
-                        mBeaconsToAdd.add(newGeofence.asBeacon());
-                        continue;
-                    }
                     Geofence googleGeofence = newGeofence.toGeofence();
                     if (googleGeofence != null) {
                         Log.d(Constants.LOG, "Adding Geofence: " + googleGeofence);
@@ -124,7 +117,7 @@ public class LocativeService extends Service implements
                                 Log.d(TAG, "Geofences added " + mGeofenceListsToAdd);
                             } else {
                                 // Get the status code for the error and log it using a user-friendly message.
-                                String errorMessage = GeofenceErrorMessages.getErrorString(LocativeService.this, status.getStatusCode());
+                                String errorMessage = GeofenceErrorMessages.getErrorString(GeofencingService.this, status.getStatusCode());
                                 Log.e(TAG, errorMessage);
                             }
                         }
@@ -142,7 +135,7 @@ public class LocativeService extends Service implements
                                 Log.d(TAG, "Geofences removed " + mGeofenceListsToRemove);
                             } else {
                                 // Get the status code for the error and log it using a user-friendly message.
-                                String errorMessage = GeofenceErrorMessages.getErrorString(LocativeService.this, status.getStatusCode());
+                                String errorMessage = GeofenceErrorMessages.getErrorString(GeofencingService.this, status.getStatusCode());
                                 Log.e(TAG, errorMessage);
                             }
                         }

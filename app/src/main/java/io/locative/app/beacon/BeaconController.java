@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.RemoteException;
+import android.util.Log;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
@@ -17,20 +18,20 @@ import java.util.Collection;
 import javax.inject.Inject;
 
 import dagger.Module;
+import io.locative.app.utils.Constants;
 
 @Module
 public class BeaconController implements BeaconConsumer, RangeNotifier {
 
     private Context mContext;
     private BeaconManager mManager;
-    private static final String IBEACON_LAYOUT = "m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24";
 
     @Inject
     public BeaconController(Context context) {
         mContext = context;
         mManager = BeaconManager.getInstanceForApplication(mContext);
         mManager.getBeaconParsers().add(
-                new BeaconParser(IBEACON_LAYOUT)
+                new BeaconParser(Layout.IBEACON_LAYOUT)
         );
         mManager.bind(this);
         mManager.addRangeNotifier(this);
@@ -74,6 +75,6 @@ public class BeaconController implements BeaconConsumer, RangeNotifier {
 
     @Override
     public void didRangeBeaconsInRegion(Collection<Beacon> collection, Region region) {
-
+        Log.d(Constants.LOG, "didRangeBeacons: " + collection + "InRegion: " + region);
     }
 }

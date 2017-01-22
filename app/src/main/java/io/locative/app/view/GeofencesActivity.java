@@ -57,7 +57,7 @@ import io.locative.app.model.Account;
 import io.locative.app.model.Geofences;
 import io.locative.app.network.LocativeApiWrapper;
 import io.locative.app.network.LocativeConnect;
-import io.locative.app.service.LocativeService;
+import io.locative.app.service.GeofencingService;
 import io.locative.app.network.SessionManager;
 import io.locative.app.network.callback.CheckSessionCallback;
 import io.locative.app.network.callback.GetAccountCallback;
@@ -594,9 +594,9 @@ public class GeofencesActivity extends BaseActivity implements GeofenceFragment.
     }
 
     private void updateGeofencingService(ArrayList<Geofences.Geofence> items) {
-        Intent geofencingService = new Intent(this, LocativeService.class);
-        geofencingService.putExtra(LocativeService.EXTRA_ACTION, LocativeService.Action.ADD);
-        geofencingService.putExtra(LocativeService.EXTRA_GEOFENCE, items);
+        Intent geofencingService = new Intent(this, GeofencingService.class);
+        geofencingService.putExtra(GeofencingService.EXTRA_ACTION, GeofencingService.Action.ADD);
+        geofencingService.putExtra(GeofencingService.EXTRA_GEOFENCE, items);
         this.startService(geofencingService);
     }
 
