@@ -55,22 +55,9 @@ public class GeofenceProvider extends AbstractProvider {
                 cursor.getString(cursor.getColumnIndex(Geofence.KEY_ENTER_URL)),
                 cursor.getInt(cursor.getColumnIndex(Geofence.KEY_EXIT_METHOD)),
                 cursor.getString(cursor.getColumnIndex(Geofence.KEY_EXIT_URL)),
-                cursor.getString(cursor.getColumnIndex(Geofence.KEY_IBEACON_UUID)),
-                cursor.getInt(cursor.getColumnIndex(Geofence.KEY_IBEACON_MAJOR)),
-                cursor.getInt(cursor.getColumnIndex(Geofence.KEY_IBEACON_MINOR)),
-                cursor.getInt(cursor.getColumnIndex(Geofence.KEY_TYPE)),
                 cursor.getInt(cursor.getColumnIndex(Geofence.KEY_CURRENTLY_ENTERED))
                 );
         return geofence;
-    }
-
-    public static BeaconItem beaconFromCursor(Cursor cursor) {
-        return new BeaconItem(
-                fromCursor(cursor),
-                cursor.getString(cursor.getColumnIndex(Geofence.KEY_IBEACON_UUID)),
-                cursor.getInt(cursor.getColumnIndex(Geofence.KEY_IBEACON_MAJOR)),
-                cursor.getInt(cursor.getColumnIndex(Geofence.KEY_IBEACON_MINOR))
-        );
     }
 
     @Override
@@ -108,15 +95,6 @@ public class GeofenceProvider extends AbstractProvider {
         @Column(Column.FieldType.TEXT)
         public static final String KEY_HTTP_PASSWORD = "http_password";
 
-        @Column(Column.FieldType.INTEGER)
-        public static final String KEY_IBEACON_MINOR = "ibeacon_minor";
-
-        @Column(Column.FieldType.INTEGER)
-        public static final String KEY_IBEACON_MAJOR = "ibeacon_major";
-
-        @Column(Column.FieldType.TEXT)
-        public static final String KEY_IBEACON_UUID = "ibeacon_uuid";
-
         @Column(Column.FieldType.FLOAT)
         public static final String KEY_LONGITUDE = "longitude";
 
@@ -131,9 +109,6 @@ public class GeofenceProvider extends AbstractProvider {
 
         @Column(Column.FieldType.INTEGER)
         public static final String KEY_TRIGGER = "triggers";
-
-        @Column(Column.FieldType.INTEGER)
-        public static final String KEY_TYPE = "type";
 
         @Column(Column.FieldType.TEXT)
         public static final String KEY_UUID = "uuid";

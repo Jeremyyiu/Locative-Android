@@ -1,5 +1,6 @@
 package io.locative.app.model;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -18,27 +19,12 @@ import io.locative.app.beacon.BeaconItem;
 import javax.inject.Inject;
 
 import io.locative.app.LocativeApplication;
+import io.locative.app.persistent.EditableItem;
 import io.locative.app.persistent.GeofenceProvider;
 import io.locative.app.utils.Constants;
 import io.locative.app.utils.Preferences;
 
 public class Geofences {
-
-    public enum Type {
-        GEOFENCE(0),
-        IBEACON(1);
-
-        int mValue;
-
-        Type(int type) {
-            mValue = type;
-        }
-
-        public int getValue() {
-            return mValue;
-        }
-    }
-
     /**
      * An array of sample (dummy) items.
      */
@@ -58,7 +44,7 @@ public class Geofences {
         ITEM_MAP.put(item.uuid, item);
     }
 
-    public static class Geofence implements Serializable {
+    public static class Geofence extends EditableItem {
         public String uuid;
         public String customId;
         public String name;
@@ -73,10 +59,6 @@ public class Geofences {
         public String enterUrl;
         public int exitMethod;
         public String exitUrl;
-        public String beaconUuid;
-        public int beaconMajor;
-        public int beaconMinor;
-        public int type;
         public int currentlyEntered;
 
         public String getRelevantId() {
@@ -104,10 +86,6 @@ public class Geofences {
                 String enterUrl,
                 int exitMethod,
                 String exitUrl,
-                String beaconUuid,
-                int beaconMajor,
-                int beaconMinor,
-                int type,
                 int currentlyEntered
         ) {
             this.uuid = (uuid == null) ? UUID.randomUUID().toString() : uuid;
@@ -124,27 +102,7 @@ public class Geofences {
             this.enterUrl = enterUrl;
             this.exitMethod = exitMethod;
             this.exitUrl = exitUrl;
-            this.beaconUuid = beaconUuid;
-            this.beaconMajor = beaconMajor;
-            this.beaconMinor = beaconMinor;
-            this.type = type;
             this.currentlyEntered = currentlyEntered;
-        }
-
-        public boolean isGeofence() {
-            return type == Type.GEOFENCE.getValue();
-        }
-
-        public boolean isBeacon() {
-            return type == Type.IBEACON.getValue();
-        }
-
-        @Nullable
-        public BeaconItem asBeacon() {
-            if (!isBeacon()) {
-                return null;
-            }
-            return new BeaconItem(this, beaconUuid, beaconMajor, beaconMinor);
         }
 
         public boolean hasAuthentication() {
@@ -210,6 +168,12 @@ public class Geofences {
                             preferences.getInt(Preferences.TRIGGER_THRESHOLD_VALUE, Preferences.TRIGGER_THRESHOLD_VALUE_DEFAULT) :
                             0
                     ).build();
+        }
+
+        @NonNull
+        @Override
+        public String getDatabaseId() {
+            return customId;
         }
     }
 }

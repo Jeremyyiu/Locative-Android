@@ -18,16 +18,22 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.v4.widget.NestedScrollView;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -39,6 +45,7 @@ import com.schuetz.mapareas.MapAreaMeasure;
 import com.schuetz.mapareas.MapAreaWrapper;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
@@ -46,11 +53,15 @@ import java.util.UUID;
 
 import butterknife.BindView;
 import butterknife.OnClick;
+import info.hoang8f.android.segmented.SegmentedGroup;
 import io.locative.app.LocativeApplication;
 import io.locative.app.R;
+import io.locative.app.beacon.BeaconItem;
 import io.locative.app.geo.LocativeGeocoder;
 import io.locative.app.geo.LocativeLocationManager;
 import io.locative.app.map.WorkaroundMapFragment;
+import io.locative.app.model.Geofences;
+import io.locative.app.persistent.EditableItem;
 import io.locative.app.persistent.GeofenceProvider;
 import io.locative.app.utils.Constants;
 import io.locative.app.utils.GeocodeHandler;
@@ -58,7 +69,12 @@ import io.locative.app.utils.UrlValidator;
 
 public class AddEditGeofenceActivity extends BaseActivity implements OnMapReadyCallback {
 
-    public static final String TYPE = "type";
+    public enum Type implements Serializable {
+        GEOFENCE,
+        BEACON
+    }
+
+    public static final String EDITABLE_ITEM = "editable_item";
 
     public static final int DEFAULT_RADIUS_METERS = 50;
     public static final int MAX_RADIUS_METERS = 500;
@@ -105,8 +121,19 @@ public class AddEditGeofenceActivity extends BaseActivity implements OnMapReadyC
     @BindView(R.id.scrollView)
     NestedScrollView mScrollView;
 
-    public String mEditGeofenceId;
-    private boolean mIsEditingGeofence = false;
+    @BindView(R.id.button_toggle_group)
+    SegmentedGroup mButtonToggleGroup;
+
+    @BindView(R.id.button_toggle_geofence)
+    RadioButton mButtonToggleGeofence;
+
+    @BindView(R.id.button_toggle_beacon)
+    RadioButton mButtonToggleBeacon;
+
+    @BindView(R.id.geofence_settings)
+    LinearLayout mGeofenceSettings;
+
+    public EditableItem mEditableItem;
 
     private LocativeLocationManager mLocativeLocationManager = null;
     private MapAreaManager mCircleManager = null;
@@ -115,12 +142,27 @@ public class AddEditGeofenceActivity extends BaseActivity implements OnMapReadyC
 
     private GeocodeHandler mGeocoderHandler = null;
     private boolean mAddressIsDirty = true;
-    //private boolean mGeocoderIsActive = false;
     private boolean mGeocodeAndSave = false;
     private boolean mSaved = false;
     private Constants.HttpMethod mEnterMethod = Constants.HttpMethod.POST;
     private Constants.HttpMethod mExitMethod = Constants.HttpMethod.POST;
     private GoogleMap mMap = null;
+
+    private boolean isEditingGeofence() {
+        return mEditableItem != null && mEditableItem instanceof Geofences.Geofence;
+    }
+
+    private boolean isEditingBeacon() {
+        return mEditableItem != null && mEditableItem instanceof BeaconItem;
+    }
+
+    private boolean isNewGeofence() {
+        return !isEditingGeofence() && mButtonToggleGeofence.isChecked();
+    }
+
+    private boolean isNewBeacon() {
+        return !isEditingBeacon() && mButtonToggleBeacon.isChecked();
+    }
 
     LocativeLocationManager.LocationResult locationResult = new LocativeLocationManager.LocationResult() {
         @Override
@@ -139,11 +181,35 @@ public class AddEditGeofenceActivity extends BaseActivity implements OnMapReadyC
         super.onCreate(savedInstanceState);
         ((LocativeApplication) getApplication()).getComponent().inject(this);
 
-        // Already existing (editing) Geofence?
-        mEditGeofenceId = getIntent().getStringExtra("geofenceId");
-        Log.d(Constants.LOG, "mEditGeofenceId: " + mEditGeofenceId);
-        if (mEditGeofenceId != null) {
-            mIsEditingGeofence = true;
+        // Set editable item in case we're editing a Geofence / Beacon
+        mEditableItem = (EditableItem) getIntent().getSerializableExtra(EDITABLE_ITEM);
+        Log.d(Constants.LOG, "mEditableItem: " + mEditableItem);
+
+        // Toggle button actions
+        mButtonToggleGeofence.setChecked(true);
+        mButtonToggleGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup radioGroup, int i) {
+                if (radioGroup.getCheckedRadioButtonId() == mButtonToggleGeofence.getId()) {
+                    Log.d(Constants.LOG, "Geofence editing selected");
+                    mGeofenceSettings.setVisibility(View.VISIBLE);
+                   getSupportFragmentManager().beginTransaction().show(
+                           getSupportFragmentManager().findFragmentById(R.id.map)
+                   ).commit();
+                } else if (radioGroup.getCheckedRadioButtonId() == mButtonToggleBeacon.getId()) {
+                    Log.d(Constants.LOG, "Beacon editing selected");
+                    mGeofenceSettings.setVisibility(View.GONE);
+                    getSupportFragmentManager().beginTransaction().hide(
+                            getSupportFragmentManager().findFragmentById(R.id.map)
+                    ).commit();
+                }
+            }
+        });
+
+        if (mEditableItem != null) {
+            mButtonToggleGroup.setVisibility(View.GONE);
+        } else {
+            mButtonToggleGroup.setVisibility(View.VISIBLE);
         }
 
         mRadiusSlider.setMax(MAX_RADIUS_METERS);
@@ -249,9 +315,9 @@ public class AddEditGeofenceActivity extends BaseActivity implements OnMapReadyC
         mMap.getUiSettings().setZoomControlsEnabled(false);
 
         Cursor cursor = null;
-        if (mIsEditingGeofence) {
+        if (isEditingGeofence()) {
             ContentResolver resolver = this.getContentResolver();
-            cursor = resolver.query(Uri.parse("content://" + getString(R.string.authority) + "/geofences"), null, "custom_id = ?", new String[]{String.valueOf(mEditGeofenceId)}, null);
+            cursor = resolver.query(Uri.parse("content://" + getString(R.string.authority) + "/geofences"), null, "custom_id = ?", new String[]{String.valueOf(mEditableItem.getDatabaseId())}, null);
             if (cursor != null && cursor.getCount() > 0) {
                 cursor.moveToFirst();
                 mLocationButton.setText(cursor.getString(cursor.getColumnIndex(GeofenceProvider.Geofence.KEY_NAME)));
@@ -277,15 +343,17 @@ public class AddEditGeofenceActivity extends BaseActivity implements OnMapReadyC
                 mBasicAuthUsername.setText(cursor.getString(cursor.getColumnIndex(GeofenceProvider.Geofence.KEY_HTTP_USERNAME)));
                 mBasicAuthPassword.setText(cursor.getString(cursor.getColumnIndex(GeofenceProvider.Geofence.KEY_HTTP_PASSWORD)));
             }
+        } else if (isEditingBeacon()) {
+            // todo: implement editing beacon
         }
 
 
         mLocativeLocationManager = new LocativeLocationManager();
-        if (!mIsEditingGeofence) {
+        if (!isEditingGeofence()) {
             mLocativeLocationManager.getLocation(this, locationResult);
         }
         Location location;
-        if (mMap.isMyLocationEnabled() && mMap.getMyLocation() != null && !mIsEditingGeofence) {
+        if (mMap.isMyLocationEnabled() && mMap.getMyLocation() != null && !isEditingGeofence()) {
             location = mMap.getMyLocation();
             mMap.getMyLocation();
         } else if (cursor != null) {
@@ -302,7 +370,8 @@ public class AddEditGeofenceActivity extends BaseActivity implements OnMapReadyC
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 16));
 
         setupCircleManager();
-        if (mIsEditingGeofence) {
+        if (isEditingGeofence()) {
+            mButtonToggleGroup.setVisibility(View.GONE);
             setCircleToLocation(location);
             int radiusMeters = cursor.getInt(cursor.getColumnIndex(GeofenceProvider.Geofence.KEY_RADIUS));
             mRadiusSlider.setProgress(radiusMeters);
@@ -415,17 +484,19 @@ public class AddEditGeofenceActivity extends BaseActivity implements OnMapReadyC
         ContentValues values = new ContentValues();
 
         String custom_id = mCustomId.getText().toString();
-        if (mIsEditingGeofence) {
-            Cursor existingCursor = resolver.query(Uri.parse("content://" + getString(R.string.authority) + "/geofences"), null, "custom_id = ?", new String[]{String.valueOf(mEditGeofenceId)}, null);
+        if (isEditingGeofence()) {
+            Cursor existingCursor = resolver.query(Uri.parse("content://" + getString(R.string.authority) + "/geofences"), null, "custom_id = ?", new String[]{String.valueOf(mEditableItem.getDatabaseId())}, null);
             if (existingCursor != null && existingCursor.getCount() > 0) {
                 existingCursor.moveToFirst();
                 if (custom_id.length() == 0) {
                     custom_id = existingCursor.getString(existingCursor.getColumnIndex(GeofenceProvider.Geofence.KEY_CUSTOMID));
                 }
             }
+        } else if (isEditingBeacon()) {
+            // todo: implement beacon editing save
         }
 
-        if (custom_id.length() == 0 && !mIsEditingGeofence) {
+        if (custom_id.length() == 0 && !isEditingGeofence()) {
             custom_id = new UUID(new Random().nextLong(), new Random().nextLong()).toString();
         }
 
@@ -453,8 +524,8 @@ public class AddEditGeofenceActivity extends BaseActivity implements OnMapReadyC
         values.put(GeofenceProvider.Geofence.KEY_LATITUDE, mCircle.getCenter().latitude);
         values.put(GeofenceProvider.Geofence.KEY_LONGITUDE, mCircle.getCenter().longitude);
 
-        if (mIsEditingGeofence) {
-            resolver.update(Uri.parse("content://" + getString(R.string.authority) + "/geofences"), values, "custom_id = ?", new String[]{String.valueOf(mEditGeofenceId)});
+        if (isEditingGeofence()) {
+            resolver.update(Uri.parse("content://" + getString(R.string.authority) + "/geofences"), values, "custom_id = ?", new String[]{String.valueOf(mEditableItem.getDatabaseId())});
         } else {
             resolver.insert(Uri.parse("content://" + getString(R.string.authority) + "/geofences"), values);
         }
@@ -565,7 +636,6 @@ public class AddEditGeofenceActivity extends BaseActivity implements OnMapReadyC
     private void doReverseGeocoding(Location location) {
         // Since the geocoding API is synchronous and may take a while.  You don't want to lock
         // up the UI thread.  Invoking reverse geocoding in an AsyncTask.
-        //mGeocoderIsActive = true;
         Log.d(Constants.LOG, "doReverseGeocoding for location: " + location);
         (new ReverseGeocodingTask(this)).execute(location);
     }
@@ -596,8 +666,6 @@ public class AddEditGeofenceActivity extends BaseActivity implements OnMapReadyC
                 updateAddressField(addresses.get(0));
             }
             mAddressIsDirty = false;
-            //mGeocoderIsActive = false;
-
             if (mGeocodeAndSave) {
                 mGeocodeAndSave = false;
                 Message.obtain(mGeocoderHandler, GeocodeHandler.SAVE_AND_FINISH, null).sendToTarget();

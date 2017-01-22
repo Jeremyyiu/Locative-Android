@@ -128,6 +128,7 @@ dependencies {
     compile 'com.github.bumptech.glide:glide:3.7.0'
     compile 'com.jakewharton.retrofit:retrofit1-okhttp3-client:1.0.2'
     compile 'org.altbeacon:android-beacon-library:2.9.2'
+    compile 'info.hoang8f:android-segmented:1.0.6'
 
     // Maybe move this to `debugCompile` and create `LocativeDebugApplication`?
     compile 'com.facebook.stetho:stetho:1.4.2'

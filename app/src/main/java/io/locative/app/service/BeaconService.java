@@ -53,20 +53,20 @@ public class BeaconService extends Service {
         final Action action = (Action) intent.getSerializableExtra(EXTRA_ACTION);
         final ArrayList<Geofences.Geofence> geofences = (ArrayList<Geofences.Geofence>) intent.getSerializableExtra(EXTRA_BEACONS);
         for (Geofences.Geofence newGeofence : geofences) {
-            if (newGeofence.isBeacon()) {
-                BeaconItem beacon = newGeofence.asBeacon();
-                if (beacon == null) {
-                    Log.e(Constants.LOG, "Could not start/stop ranging for beacon as it's null: " + newGeofence.toString());
-                    continue;
-                }
-                if (action == Action.ADD) {
-                    mBeaconController.startRanging(beacon);
-                    Log.d(Constants.LOG, "Started ranging for " + beacon.toString());
-                } else {
-                    mBeaconController.stopRanging(beacon);
-                    Log.d(Constants.LOG, "Stopped ranging for " + beacon.getUuid());
-                }
-            }
+//            if (newGeofence.isBeacon()) {
+//                BeaconItem beacon = newGeofence.asBeacon();
+//                if (beacon == null) {
+//                    Log.e(Constants.LOG, "Could not start/stop ranging for beacon as it's null: " + newGeofence.toString());
+//                    continue;
+//                }
+//                if (action == Action.ADD) {
+//                    mBeaconController.startRanging(beacon);
+//                    Log.d(Constants.LOG, "Started ranging for " + beacon.toString());
+//                } else {
+//                    mBeaconController.stopRanging(beacon);
+//                    Log.d(Constants.LOG, "Stopped ranging for " + beacon.getUuid());
+//                }
+//            }
         }
 
         return super.onStartCommand(intent, flags, startId);

@@ -3,7 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main_content"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:animateLayoutChanges="true">
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appbar"
@@ -36,9 +37,37 @@
             android:background="@color/background"
             tools:context="io.locative.app.AddEditGeofenceActivity">
 
+            <info.hoang8f.android.segmented.SegmentedGroup
+                xmlns:segmentedgroup="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/button_toggle_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:orientation="horizontal"
+                segmentedgroup:sc_border_width="2dp"
+                segmentedgroup:sc_corner_radius="10dp">
+
+                <RadioButton
+                    android:id="@+id/button_toggle_geofence"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="50"
+                    android:text="@string/geofence"
+                    style="@style/RadioButton" />
+
+                <RadioButton
+                    android:id="@+id/button_toggle_beacon"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="50"
+                    android:text="@string/beacon"
+                    style="@style/RadioButton" />
+
+            </info.hoang8f.android.segmented.SegmentedGroup>
+
             <fragment
-                android:id="@+id/map"
                 class="io.locative.app.map.WorkaroundMapFragment"
+                android:id="@+id/map"
                 android:layout_width="match_parent"
                 android:layout_height="250dp" />
 
@@ -54,6 +83,7 @@
                 app:cardElevation="@dimen/default_card_elevation">
 
                 <LinearLayout
+                    android:id="@+id/geofence_settings"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginRight="10dp"
